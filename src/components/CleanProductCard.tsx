@@ -54,13 +54,6 @@ export const CleanProductCard: React.FC<CleanProductCardProps> = ({
           />
         </button>
 
-        {/* Indikator Slider Dots Kecil di Kanan Bawah */}
-        <div className="absolute bottom-2.5 right-3 flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-ink" />
-          <span className="w-1.5 h-1.5 rounded-full bg-control-gray" />
-          <span className="w-1.5 h-1.5 rounded-full bg-control-gray" />
-        </div>
-
         {/* Tombol Quick Add di Pojok Kiri Bawah: Pricing Blue (#0071e3) */}
         {item.isAvailable && onQuickAdd && (
           <button

@@ -144,13 +144,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             </div>
           </div>
 
-          {/* Indicator Slider Dots */}
-          <div className="flex items-center justify-center gap-1.5 mb-4">
-            <span className="w-5 h-1.5 rounded-full bg-ink" />
-            <span className="w-1.5 h-1.5 rounded-full bg-control-gray" />
-            <span className="w-1.5 h-1.5 rounded-full bg-control-gray" />
-          </div>
-
           {/* Title & Price */}
           <div className="space-y-1 mb-2.5">
             <div className="flex items-start justify-between gap-3">

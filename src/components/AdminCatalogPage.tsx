@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ChangeEvent } from 'react';
+import { Button, Modal } from '@heroui/react';
 import { IconArrowLeft, IconDeviceFloppy, IconPencil, IconPlus, IconTrash } from '@tabler/icons-react';
 import { DEFAULT_STORE } from '../data/defaultStore';
 import type { MenuItem } from '../types/catalog';
@@ -30,6 +31,7 @@ export function AdminCatalogPage() {
   const [store, setStore] = useState<StoreCatalog | null>(null);
   const [form, setForm] = useState<MenuForm>(EMPTY_FORM);
   const [editingMenuId, setEditingMenuId] = useState<string | null>(null);
+  const [menuToDelete, setMenuToDelete] = useState<MenuItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -138,14 +140,18 @@ export function AdminCatalogPage() {
     if (saved) resetForm();
   };
 
-  const handleDelete = async (item: MenuItem) => {
-    if (!store || !window.confirm(`Hapus "${item.name}" dari katalog?`)) return;
+  const handleDelete = async () => {
+    if (!store || !menuToDelete) return;
     const updated = {
       ...store,
-      menus: store.menus.filter((menu) => menu.id !== item.id),
+      menus: store.menus.filter((menu) => menu.id !== menuToDelete.id),
     };
-    await persistCatalog(updated, 'Menu berhasil dihapus.');
-    if (editingMenuId === item.id) resetForm();
+    const deletedId = menuToDelete.id;
+    const saved = await persistCatalog(updated, 'Menu berhasil dihapus.');
+    if (saved) {
+      setMenuToDelete(null);
+      if (editingMenuId === deletedId) resetForm();
+    }
   };
 
   const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
@@ -224,7 +230,7 @@ export function AdminCatalogPage() {
                       <button type="button" onClick={() => startEditing(item)} aria-label={`Edit ${item.name}`} className="rounded-lg p-2 text-slate hover:bg-paper-frost hover:text-ink">
                         <IconPencil size={18} />
                       </button>
-                      <button type="button" onClick={() => void handleDelete(item)} aria-label={`Hapus ${item.name}`} className="rounded-lg p-2 text-red-600 hover:bg-red-50">
+                      <button type="button" onClick={() => setMenuToDelete(item)} aria-label={`Hapus ${item.name}`} className="rounded-lg p-2 text-red-600 hover:bg-red-50">
                         <IconTrash size={18} />
                       </button>
                     </article>
@@ -263,7 +269,7 @@ export function AdminCatalogPage() {
                     <input value={form.imageUrl.startsWith('data:image/') ? '' : form.imageUrl} onChange={(event) => setForm({ ...form, imageUrl: event.target.value })} className="rounded-xl border border-hairline px-3 py-2.5 font-normal" placeholder="https://... atau /images/..." />
                   </label>
                   <label className="grid gap-1.5 text-sm font-medium">
-                    Atau unggah gambar (maks. 1 MB)
+                    Unggah satu gambar (maks. 1 MB)
                     <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full text-sm font-normal file:mr-3 file:rounded-lg file:border-0 file:bg-paper-frost file:px-3 file:py-2" />
                   </label>
                   {form.imageUrl && isAllowedImageSource(form.imageUrl) && (
@@ -285,6 +291,44 @@ export function AdminCatalogPage() {
           </>
         )}
       </div>
+
+      <Modal
+        isOpen={menuToDelete !== null}
+        onOpenChange={(open) => !open && setMenuToDelete(null)}
+      >
+        <Modal.Backdrop variant="blur">
+          <Modal.Container size="sm">
+            <Modal.Dialog className="w-full bg-white">
+              <Modal.Header>
+                <Modal.Heading>Hapus menu?</Modal.Heading>
+                <Modal.CloseTrigger />
+              </Modal.Header>
+              <Modal.Body>
+                <p>
+                  Yakin ingin menghapus <strong>{menuToDelete?.name}</strong> dari katalog?
+                  Tindakan ini tidak dapat dibatalkan.
+                </p>
+              </Modal.Body>
+              <Modal.Footer className="flex justify-end gap-2">
+                <Button
+                  variant="secondary"
+                  isDisabled={isSaving}
+                  onPress={() => setMenuToDelete(null)}
+                >
+                  Batal
+                </Button>
+                <Button
+                  variant="danger"
+                  isDisabled={isSaving}
+                  onPress={() => void handleDelete()}
+                >
+                  {isSaving ? 'Menghapus…' : 'Hapus menu'}
+                </Button>
+              </Modal.Footer>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
+      </Modal>
     </main>
   );
 }
