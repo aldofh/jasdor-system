@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
-  Button,
   Dropdown,
   Label,
-  Modal,
   SearchField,
   Toast,
   toast,
@@ -13,11 +11,10 @@ import {
   IconCheck,
   IconShoppingBag,
 } from '@tabler/icons-react';
-import { BRANDS, getOutletsByBrand, type BrandInfo } from './data/mockBrands';
+import { BRANDS, getOutletsByBrand } from './data/mockBrands';
 import type { Outlet, MenuItem } from './types/catalog';
 import type { CartItem } from './types/cart';
 import { DeliveryHeader } from './components/DeliveryHeader';
-import { BrandSelector } from './components/BrandSelector';
 import { CleanProductCard } from './components/CleanProductCard';
 import { ProductDetailPage } from './components/ProductDetailPage';
 import { CartStandalonePage } from './components/CartStandalonePage';
@@ -32,10 +29,9 @@ export default function App() {
 }
 
 function CatalogPage() {
-  const [brands, setBrands] = useState<BrandInfo[]>(BRANDS);
-  const [currentBrand, setCurrentBrand] = useState<BrandInfo>(BRANDS[0]);
-  const brandOutlets = getOutletsByBrand(currentBrand);
-  const [currentOutlet, setCurrentOutlet] = useState<Outlet>(brandOutlets[0]);
+  const [currentOutlet, setCurrentOutlet] = useState<Outlet>(
+    getOutletsByBrand(BRANDS[0])[0],
+  );
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -46,7 +42,6 @@ function CatalogPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [detailProduct, setDetailProduct] = useState<MenuItem | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [pendingBrandChange, setPendingBrandChange] = useState<BrandInfo | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
 
   useEffect(() => {
@@ -55,8 +50,9 @@ function CatalogPage() {
       .then((catalog) => {
         if (!active) return;
         const selected = catalog.find((brand) => brand.id === BRANDS[0].id) ?? catalog[0];
-        setBrands(catalog);
-        setCurrentBrand(selected);
+        if (!selected) {
+          throw new Error('Brand katalog utama tidak ditemukan.');
+        }
         setCurrentOutlet(getOutletsByBrand(selected)[0]);
       })
       .catch((error: unknown) => {
@@ -192,33 +188,6 @@ function CatalogPage() {
     );
   }
 
-  const handleSelectBrand = (newBrand: BrandInfo) => {
-    if (newBrand.id === currentBrand.id) return;
-    if (cartItems.length > 0) {
-      setPendingBrandChange(newBrand);
-      return;
-    }
-    const newOutlets = getOutletsByBrand(newBrand);
-    setCurrentBrand(newBrand);
-    setCurrentOutlet(newOutlets[0]);
-    setSelectedCategory('All');
-    setSearchQuery('');
-    showToast(`Beralih ke ${newBrand.name}`, 'Menu dan gerai telah diperbarui');
-  };
-
-  const confirmChangeBrand = () => {
-    if (pendingBrandChange) {
-      const newOutlets = getOutletsByBrand(pendingBrandChange);
-      setCurrentBrand(pendingBrandChange);
-      setCurrentOutlet(newOutlets[0]);
-      setSelectedCategory('All');
-      setSearchQuery('');
-      setCartItems([]);
-      setPendingBrandChange(null);
-      showToast(`Beralih ke ${pendingBrandChange.name}`, 'Keranjang telah dikosongkan');
-    }
-  };
-
   if (isCartOpen) {
     return (
       <>
@@ -317,13 +286,6 @@ function CatalogPage() {
             </Dropdown>
           </div>
 
-          {/* Pilihan Brand Kopi (Kopi Kenangan, Fore, Tomoro) */}
-          <BrandSelector
-            brands={brands}
-            currentBrand={currentBrand}
-            onSelectBrand={handleSelectBrand}
-          />
-
           {/* Clean Horizontal Scrollable Category Pills */}
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 -mx-4 px-4">
             {categories.map((cat) => {
@@ -390,41 +352,6 @@ function CatalogPage() {
           </div>
         )}
 
-        {/* Modal Konfirmasi Pindah Brand */}
-        <Modal isOpen={!!pendingBrandChange} onOpenChange={(open) => !open && setPendingBrandChange(null)}>
-          <Modal.Backdrop variant="blur">
-            <Modal.Container size="sm">
-              <Modal.Dialog className="w-full bg-gallery-white border border-hairline">
-                <Modal.Header>
-                  <Modal.Heading className="text-ink font-semibold">Ganti Brand Kopi?</Modal.Heading>
-                  <Modal.CloseTrigger />
-                </Modal.Header>
-                <Modal.Body>
-                  <p className="text-xs text-slate leading-relaxed">
-                    Keranjangmu saat ini berisi menu dari <strong className="text-ink">{currentBrand.name}</strong>.
-                    Beralih ke <strong className="text-ink">{pendingBrandChange?.name}</strong> akan mengosongkan keranjang belanja.
-                  </p>
-                </Modal.Body>
-                <Modal.Footer className="flex gap-2">
-                  <Button
-                    variant="secondary"
-                    className="flex-1 bg-paper-frost text-ink border border-hairline"
-                    onPress={() => setPendingBrandChange(null)}
-                  >
-                    Batal
-                  </Button>
-                  <Button
-                    variant="primary"
-                    className="flex-1 bg-launch-orange text-gallery-white"
-                    onPress={confirmChangeBrand}
-                  >
-                    Ya, Ganti Brand
-                  </Button>
-                </Modal.Footer>
-              </Modal.Dialog>
-            </Modal.Container>
-          </Modal.Backdrop>
-        </Modal>
       </div>
     </>
   );
