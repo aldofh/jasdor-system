@@ -13,7 +13,7 @@ export const DeliveryHeader: React.FC<DeliveryHeaderProps> = ({
   ownerName = 'Ketoprak Was Was',
   storeName,
 }) => {
-  const displayName = storeName || currentOutlet?.brand || 'Kopi Kenangan';
+  const displayName = storeName || currentOutlet?.brand || 'WASWAS';
 
   return (
     <div className="flex items-center justify-between py-1.5">

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import type { CartItem, CustomerProfile, OrderPayload } from '../types/cart';
-import type { MenuItem, MenuOption, Outlet } from '../types/catalog';
-import { mockOutlets } from '../data/mockOutlets';
+import type { MenuItem, MenuOption } from '../types/catalog';
+import { BRANDS, getOutletsByBrand } from '../data/mockBrands';
 import { constructWhatsAppMessage, buildWhatsAppUrl, generateOrderId } from '../utils/whatsapp';
 
 const CART_STORAGE_KEY = 'jasdor_cart';
-const OUTLET_STORAGE_KEY = 'jasdor_selected_outlet';
 const CUSTOMER_STORAGE_KEY = 'jasdor_customer_profile';
+const DEFAULT_OUTLET = getOutletsByBrand(BRANDS[0])[0];
 
 const DEFAULT_CUSTOMER: CustomerProfile = {
   name: '',
@@ -18,15 +18,6 @@ const DEFAULT_CUSTOMER: CustomerProfile = {
 };
 
 export function useCartManager() {
-  const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(() => {
-    const saved = localStorage.getItem(OUTLET_STORAGE_KEY);
-    if (saved) {
-      const found = mockOutlets.find((o) => o.id === saved);
-      if (found) return found;
-    }
-    return mockOutlets[0]; // Default ke outlet pertama
-  });
-
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     try {
       const saved = localStorage.getItem(CART_STORAGE_KEY);
@@ -54,19 +45,6 @@ export function useCartManager() {
   useEffect(() => {
     localStorage.setItem(CUSTOMER_STORAGE_KEY, JSON.stringify(customer));
   }, [customer]);
-
-  // Ganti outlet dengan proteksi reset keranjang jika beda outlet
-  const changeOutlet = (newOutlet: Outlet, forceReset: boolean = false) => {
-    if (selectedOutlet && selectedOutlet.id !== newOutlet.id) {
-      if (cartItems.length > 0 && !forceReset) {
-        return false; // Beri sinyal ke UI butuh konfirmasi
-      }
-      setCartItems([]);
-    }
-    setSelectedOutlet(newOutlet);
-    localStorage.setItem(OUTLET_STORAGE_KEY, newOutlet.id);
-    return true;
-  };
 
   // Tambah item ke keranjang
   const addToCart = (
@@ -152,7 +130,7 @@ export function useCartManager() {
 
   // Generate URL WhatsApp untuk checkout
   const checkoutWhatsAppUrl = (): string | null => {
-    if (!selectedOutlet || cartItems.length === 0) return null;
+    if (cartItems.length === 0) return null;
 
     const now = new Date();
     const createdAt = now.toLocaleString('id-ID', {
@@ -161,10 +139,10 @@ export function useCartManager() {
     });
 
     const payload: OrderPayload = {
-      orderId: generateOrderId(selectedOutlet.slug),
-      outletId: selectedOutlet.id,
-      outletName: selectedOutlet.name,
-      whatsappNumber: selectedOutlet.whatsappNumber,
+      orderId: generateOrderId(DEFAULT_OUTLET.slug),
+      outletId: DEFAULT_OUTLET.id,
+      outletName: DEFAULT_OUTLET.name,
+      whatsappNumber: DEFAULT_OUTLET.whatsappNumber,
       items: cartItems,
       subtotal,
       deliveryFee,
@@ -174,12 +152,11 @@ export function useCartManager() {
     };
 
     const message = constructWhatsAppMessage(payload);
-    return buildWhatsAppUrl(selectedOutlet.whatsappNumber, message);
+    return buildWhatsAppUrl(DEFAULT_OUTLET.whatsappNumber, message);
   };
 
   return {
-    selectedOutlet,
-    changeOutlet,
+    outlet: DEFAULT_OUTLET,
     cartItems,
     addToCart,
     updateQuantity,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Button,
   Input,
@@ -17,11 +17,9 @@ import {
   IconTruck,
   IconBuildingStore,
   IconAlertCircle,
-  IconCheck,
 } from '@tabler/icons-react';
 import type { CartItem, CustomerProfile, OrderPayload, DeliveryMethod } from '../types/cart';
 import type { Outlet } from '../types/catalog';
-import { mockOutlets } from '../data/mockOutlets';
 import {
   formatRupiah,
   generateOrderId,
@@ -33,7 +31,6 @@ interface CartStandalonePageProps {
   onBack: () => void;
   cartItems: CartItem[];
   outlet: Outlet;
-  onSelectOutlet?: (outlet: Outlet) => void;
   onRemoveItem: (id: string) => void;
   onClearCart: () => void;
 }
@@ -44,52 +41,13 @@ export const CartStandalonePage: React.FC<CartStandalonePageProps> = ({
   onBack,
   cartItems,
   outlet,
-  onSelectOutlet,
   onRemoveItem,
   onClearCart,
 }) => {
-  const [selectedOutlet, setSelectedOutlet] = useState<Outlet>(outlet);
-  // Default kosong (zero) agar tidak terisi otomatis
-  const [customBranchName, setCustomBranchName] = useState<string>('');
-  const [debouncedQuery, setDebouncedQuery] = useState<string>('');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
   // Scroll ke paling atas saat halaman checkout dibuka
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
   }, []);
-
-  // Debounce input pencarian cabang (300ms)
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedQuery(customBranchName.trim());
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [customBranchName]);
-
-  // Tutup dropdown saat klik di luar
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Filter cabang berdasarkan input debounced
-  const matchingOutlets = debouncedQuery.length >= 2
-    ? mockOutlets.filter((o) => {
-        const q = debouncedQuery.toLowerCase();
-        return (
-          o.name.toLowerCase().includes(q) ||
-          o.address.toLowerCase().includes(q) ||
-          o.location.city.toLowerCase().includes(q)
-        );
-      })
-    : mockOutlets.slice(0, 5);
 
   const [profile, setProfile] = useState<CustomerProfile>(() => {
     try {
@@ -140,10 +98,6 @@ export const CartStandalonePage: React.FC<CartStandalonePageProps> = ({
       setErrorMessage('Silakan pilih metode penerimaan: Diantar atau Ambil Sendiri');
       return false;
     }
-    if (!customBranchName.trim()) {
-      setErrorMessage('Cabang pemesanan wajib diisi');
-      return false;
-    }
     if (profile.deliveryMethod === 'delivery' && !profile.address?.trim()) {
       setErrorMessage('Alamat pengantaran wajib diisi untuk opsi Diantar');
       return false;
@@ -154,15 +108,13 @@ export const CartStandalonePage: React.FC<CartStandalonePageProps> = ({
   const handleSendWhatsApp = () => {
     if (!validateOrder()) return;
 
-    const finalBranchName = customBranchName.trim() || selectedOutlet.name;
-
     const orderPayload: OrderPayload = {
-      orderId: generateOrderId(selectedOutlet.slug),
-      outletId: selectedOutlet.id,
-      outletName: finalBranchName,
-      whatsappNumber: selectedOutlet.whatsappNumber,
-      outletAddress: selectedOutlet.address,
-      outletMapsQuery: selectedOutlet.googleMapsQuery || finalBranchName,
+      orderId: generateOrderId(outlet.slug),
+      outletId: outlet.id,
+      outletName: outlet.name,
+      whatsappNumber: outlet.whatsappNumber,
+      outletAddress: outlet.address,
+      outletMapsQuery: outlet.googleMapsQuery || outlet.name,
       items: cartItems,
       subtotal,
       deliveryFee: 0,
@@ -175,7 +127,7 @@ export const CartStandalonePage: React.FC<CartStandalonePageProps> = ({
     };
 
     const message = constructWhatsAppMessage(orderPayload);
-    const waUrl = buildWhatsAppUrl(selectedOutlet.whatsappNumber, message);
+    const waUrl = buildWhatsAppUrl(outlet.whatsappNumber, message);
 
     window.open(waUrl, '_blank', 'noopener,noreferrer');
   };
@@ -200,7 +152,7 @@ export const CartStandalonePage: React.FC<CartStandalonePageProps> = ({
                 Keranjang & Checkout
               </h1>
               <p className="text-xs text-slate truncate leading-tight mt-0.5">
-                {selectedOutlet.name}
+                {outlet.name}
               </p>
             </div>
           </div>
@@ -323,95 +275,6 @@ export const CartStandalonePage: React.FC<CartStandalonePageProps> = ({
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* Bagian 1.5: Input Field Cabang Simpel dengan Debounce Live Dropdown */}
-            <div className="p-4 bg-gallery-white rounded-3xl border border-hairline space-y-2 shadow-2xs" ref={dropdownRef}>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-ink block">
-                  Cabang Pemesanan
-                </span>
-                <span className="text-[10px] font-semibold text-pricing-blue bg-paper-frost px-2 py-0.5 rounded-full border border-hairline">
-                  {selectedOutlet.location.city || 'Semarang'}
-                </span>
-              </div>
-
-              {/* Input Text Bersih: Paper Frost & Hairline */}
-              <div className="relative">
-                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-steel">
-                  <IconBuildingStore size={18} stroke={1.75} />
-                </div>
-                <input
-                  type="search"
-                  name="store-search-query"
-                  id="store-search-query"
-                  value={customBranchName}
-                  onChange={(e) => {
-                    setCustomBranchName(e.target.value);
-                    setIsDropdownOpen(true);
-                  }}
-                  onFocus={() => setIsDropdownOpen(true)}
-                  placeholder="Ketik cabang/mall (contoh: anjasmoro, ciputra)..."
-                  autoComplete="one-time-code"
-                  autoCorrect="off"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  data-form-type="other"
-                  data-lpignore="true"
-                  className="w-full pl-10 pr-4 py-3 text-sm bg-paper-frost rounded-2xl border border-hairline focus:outline-none focus:bg-gallery-white focus:border-pricing-blue text-ink font-medium placeholder:text-steel transition-colors"
-                />
-
-                {/* Live Dropdown Hasil Debounce */}
-                {isDropdownOpen && matchingOutlets.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-gallery-white rounded-2xl border border-hairline shadow-xl overflow-hidden z-50 max-h-56 overflow-y-auto">
-                    <div className="px-3 py-1.5 bg-studio-mist border-b border-hairline flex items-center justify-between text-[11px] font-semibold text-slate">
-                      <span>Pilihan Cabang Resmi</span>
-                      <span>{matchingOutlets.length} lokasi</span>
-                    </div>
-                    {matchingOutlets.map((item) => {
-                      const isSelected = selectedOutlet.id === item.id;
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedOutlet(item);
-                            setCustomBranchName(item.name);
-                            setIsDropdownOpen(false);
-                            if (onSelectOutlet) onSelectOutlet(item);
-                          }}
-                          className={`w-full px-3.5 py-2.5 text-left border-b border-hairline last:border-0 flex items-start justify-between gap-2.5 transition-colors cursor-pointer ${
-                            isSelected ? 'bg-studio-mist' : 'hover:bg-paper-frost'
-                          }`}
-                        >
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-xs font-semibold text-ink truncate">
-                                {item.name}
-                              </span>
-                              <span className="text-[9px] font-semibold uppercase px-1.5 py-0.2 rounded bg-control-gray text-slate shrink-0">
-                                {item.location.city}
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-slate truncate mt-0.5">
-                              {item.address}
-                            </p>
-                          </div>
-                          {isSelected && (
-                            <div className="w-5 h-5 rounded-full bg-pricing-blue text-gallery-white flex items-center justify-center shrink-0 mt-0.5">
-                              <IconCheck size={12} stroke={3} />
-                            </div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <p className="text-[11px] text-steel px-0.5">
-                Bisa pilih dari saran di atas atau ketik bebas nama gerai terdekatmu.
-              </p>
             </div>
 
             {/* Bagian 2: Opsi Pengantaran (Delivery vs Pickup) */}

@@ -12,7 +12,7 @@ import {
   IconShoppingBag,
 } from '@tabler/icons-react';
 import { BRANDS, getOutletsByBrand } from './data/mockBrands';
-import type { Outlet, MenuItem } from './types/catalog';
+import type { MenuItem } from './types/catalog';
 import type { CartItem } from './types/cart';
 import { DeliveryHeader } from './components/DeliveryHeader';
 import { CleanProductCard } from './components/CleanProductCard';
@@ -29,9 +29,8 @@ export default function App() {
 }
 
 function CatalogPage() {
-  const [currentOutlet, setCurrentOutlet] = useState<Outlet>(
-    getOutletsByBrand(BRANDS[0])[0],
-  );
+  const [catalogBrand, setCatalogBrand] = useState(BRANDS[0]);
+  const currentOutlet = getOutletsByBrand(catalogBrand)[0];
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -53,7 +52,7 @@ function CatalogPage() {
         if (!selected) {
           throw new Error('Brand katalog utama tidak ditemukan.');
         }
-        setCurrentOutlet(getOutletsByBrand(selected)[0]);
+        setCatalogBrand(selected);
       })
       .catch((error: unknown) => {
         if (active) {
@@ -196,7 +195,6 @@ function CatalogPage() {
           onBack={closeCart}
           cartItems={cartItems}
           outlet={currentOutlet}
-          onSelectOutlet={setCurrentOutlet}
           onRemoveItem={handleRemoveItem}
           onClearCart={handleClearCart}
         />
