@@ -22,11 +22,22 @@ import { CleanProductCard } from './components/CleanProductCard';
 import { ProductDetailPage } from './components/ProductDetailPage';
 import { CartStandalonePage } from './components/CartStandalonePage';
 import { formatRupiah } from './utils/whatsapp';
+import { AdminCatalogPage } from './components/AdminCatalogPage';
+import { loadCatalog } from './services/catalogApi';
 
 export default function App() {
+  return window.location.pathname === '/admin'
+    ? <AdminCatalogPage />
+    : <CatalogPage />;
+}
+
+function CatalogPage() {
+  const [brands, setBrands] = useState<BrandInfo[]>(BRANDS);
   const [currentBrand, setCurrentBrand] = useState<BrandInfo>(BRANDS[0]);
   const brandOutlets = getOutletsByBrand(currentBrand);
   const [currentOutlet, setCurrentOutlet] = useState<Outlet>(brandOutlets[0]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc'>('default');
@@ -38,6 +49,30 @@ export default function App() {
   const [pendingBrandChange, setPendingBrandChange] = useState<BrandInfo | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
 
+  useEffect(() => {
+    let active = true;
+    loadCatalog(BRANDS)
+      .then((catalog) => {
+        if (!active) return;
+        const selected = catalog.find((brand) => brand.id === BRANDS[0].id) ?? catalog[0];
+        setBrands(catalog);
+        setCurrentBrand(selected);
+        setCurrentOutlet(getOutletsByBrand(selected)[0]);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setCatalogError(error instanceof Error ? error.message : 'Katalog gagal dimuat.');
+        }
+      })
+      .finally(() => {
+        if (active) setCatalogLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   // Integrasi Browser History: Tangani Tombol Back Bawaan HP / Browser
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
@@ -45,17 +80,14 @@ export default function App() {
       if (!state || state.view === 'home') {
         setDetailProduct(null);
         setIsCartOpen(false);
-        setIsOutletPickerOpen(false);
       } else if (state.view === 'cart') {
         setDetailProduct(null);
         setIsCartOpen(true);
-        setIsOutletPickerOpen(false);
       } else if (state.view === 'product') {
         const found = currentOutlet.menus.find((m) => m.id === state.productId);
         if (found) {
           setDetailProduct(found);
           setIsCartOpen(false);
-          setIsOutletPickerOpen(false);
         }
       }
     };
@@ -141,6 +173,24 @@ export default function App() {
   const handleClearCart = () => {
     setCartItems([]);
   };
+
+  if (catalogLoading || catalogError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gallery-white px-6 text-center">
+        <div className="max-w-sm">
+          <p className="font-semibold text-ink">
+            {catalogLoading ? 'Memuat katalog…' : 'Katalog belum dapat dimuat'}
+          </p>
+          {catalogError && <p role="alert" className="mt-2 text-sm text-red-700">{catalogError}</p>}
+          {catalogError && (
+            <button type="button" onClick={() => window.location.reload()} className="mt-4 rounded-xl bg-ink px-4 py-2 text-sm font-medium text-white">
+              Coba lagi
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   const handleSelectBrand = (newBrand: BrandInfo) => {
     if (newBrand.id === currentBrand.id) return;
@@ -269,7 +319,7 @@ export default function App() {
 
           {/* Pilihan Brand Kopi (Kopi Kenangan, Fore, Tomoro) */}
           <BrandSelector
-            brands={BRANDS}
+            brands={brands}
             currentBrand={currentBrand}
             onSelectBrand={handleSelectBrand}
           />

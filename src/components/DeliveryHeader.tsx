@@ -10,7 +10,7 @@ interface DeliveryHeaderProps {
 
 export const DeliveryHeader: React.FC<DeliveryHeaderProps> = ({
   currentOutlet,
-  ownerName = 'Jasdor Partner',
+  ownerName = 'Ketoprak Was Was',
   storeName,
 }) => {
   const displayName = storeName || currentOutlet?.brand || 'Kopi Kenangan';

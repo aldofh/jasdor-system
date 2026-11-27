@@ -46,7 +46,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   // Cek apakah semua grup opsi wajib sudah dipilih
   const requiredGroups = item.optionGroups?.filter((g) => g.required) || [];
   const missingRequired = requiredGroups.some((g) => !selectedOptions[g.id]);
-  const canAddToCart = quantity > 0 && !missingRequired;
+  const canAddToCart = item.isAvailable && quantity > 0 && !missingRequired;
 
   // Scroll ke paling atas saat halaman detail dibuka
   useEffect(() => {
@@ -338,7 +338,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               onPress={handleConfirmAddToCart}
             >
               <span className="truncate">
-                {missingRequired ? 'Pilih Varian Wajib' : '+ Keranjang'}
+                {!item.isAvailable ? 'Habis' : missingRequired ? 'Pilih Varian Wajib' : '+ Keranjang'}
               </span>
               <span className="font-bold shrink-0 ml-1.5">{formatRupiah(totalPrice)}</span>
             </Button>

@@ -1,32 +1,23 @@
-# React + TypeScript + Vite
+# Jasdor System
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Katalog pemesanan multi-brand dengan checkout WhatsApp dan panel pengelolaan katalog.
 
-Currently, two official plugins are available:
+## Menjalankan lokal
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Pastikan Node.js dan npm tersedia, lalu dari folder proyek jalankan:
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Buka alamat Vite yang ditampilkan di terminal, biasanya `http://localhost:5173`. Panel katalog ada di `http://localhost:5173/admin`. Perubahan katalog disimpan oleh server lokal ke `server-data/catalog.json` dan akan digunakan halaman pelanggan.
+
+Untuk pemeriksaan production:
+
+```bash
+npm run build
+npm start
+```
+
+Server melayani halaman hasil build dan API katalog pada port `3001` (dapat diubah dengan `PORT`). Simpan direktori `server-data` pada persistent disk saat hosting agar perubahan tidak hilang ketika server dimulai ulang. Admin belum menggunakan login; jangan publikasikan server sebelum akses admin dilindungi.
