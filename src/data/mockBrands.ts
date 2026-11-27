@@ -358,7 +358,7 @@ const TOMORO_BRANCHES = [
 export const BRANDS: BrandInfo[] = [
   {
     id: 'kopi-kenangan',
-    name: 'Kopi Kenangan',
+    name: 'Ketoprak Was Was!',
     slug: 'kopi-kenangan',
     tagline: 'Kopi Mantan Paling Pas di Lidah',
     logoUrl: '/brands/kopi-kenangan.png',
