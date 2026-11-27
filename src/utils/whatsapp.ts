@@ -9,8 +9,8 @@ export function formatRupiah(amount: number): string {
   }).format(amount);
 }
 
-export function generateOrderId(outletSlug: string): string {
-  const prefix = outletSlug.slice(0, 3).toUpperCase();
+export function generateOrderId(storeSlug: string): string {
+  const prefix = storeSlug.slice(0, 3).toUpperCase();
   const dateStr = new Date().toISOString().slice(2, 10).replace(/-/g, '');
   const randomSuffix = Math.floor(1000 + Math.random() * 9000);
   return `#${prefix}-${dateStr}-${randomSuffix}`;
@@ -35,7 +35,7 @@ export function constructWhatsAppMessage(order: OrderPayload): string {
       : '';
 
   const message = `*PESANAN BARU*
-Outlet: ${order.outletName}
+Toko: ${order.storeName}
 No. Pesanan: ${order.orderId}
 Tanggal: ${order.createdAt}
 

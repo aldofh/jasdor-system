@@ -22,29 +22,3 @@ export interface MenuItem {
   isAvailable: boolean;
   optionGroups?: MenuOptionGroup[];
 }
-
-export interface OutletLocation {
-  lat: number;
-  lng: number;
-  city: string;
-}
-
-export interface Outlet {
-  id: string;
-  slug: string;
-  name: string;
-  brand: string;
-  tagline: string;
-  logoUrl: string;
-  bannerUrl: string;
-  whatsappNumber: string; // format internasional: 628xxxx
-  address: string;
-  googleMapsQuery?: string;
-  location: OutletLocation;
-  distanceKm?: number;
-  openingHours: string;
-  isActive: boolean;
-  qrisImageUrl?: string;
-  categories: string[];
-  menus: MenuItem[];
-}

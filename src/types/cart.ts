@@ -31,11 +31,9 @@ export interface CustomerProfile {
 
 export interface OrderPayload {
   orderId: string;
-  outletId: string;
-  outletName: string;
+  storeId: string;
+  storeName: string;
   whatsappNumber: string;
-  outletAddress?: string;
-  outletMapsQuery?: string;
   items: CartItem[];
   subtotal: number;
   deliveryFee: number;

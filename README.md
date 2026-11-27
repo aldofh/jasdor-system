@@ -1,6 +1,6 @@
-# Jasdor System
+# KEWAS SYSTEM
 
-Katalog pemesanan multi-brand dengan checkout WhatsApp dan panel pengelolaan katalog.
+Katalog pemesanan untuk satu toko, dengan checkout WhatsApp dan panel pengelolaan katalog.
 
 ## Menjalankan lokal
 
@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Buka alamat Vite yang ditampilkan di terminal, biasanya `http://localhost:5173`. Panel katalog ada di `http://localhost:5173/admin`. Perubahan katalog disimpan oleh server lokal ke `server-data/catalog.json` dan akan digunakan halaman pelanggan.
+Buka alamat Vite yang ditampilkan di terminal, biasanya `http://localhost:5173`. Panel katalog ada di `http://localhost:5173/admin`. Perubahan katalog dan informasi toko disimpan oleh server lokal ke `server-data/catalog.json` dan digunakan halaman pelanggan. Data katalog lama otomatis dimigrasikan dengan mempertahankan menu toko yang sebelumnya ditampilkan ke pelanggan.
 
 Untuk pemeriksaan production:
 

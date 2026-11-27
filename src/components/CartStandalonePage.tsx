@@ -19,7 +19,7 @@ import {
   IconAlertCircle,
 } from '@tabler/icons-react';
 import type { CartItem, CustomerProfile, OrderPayload, DeliveryMethod } from '../types/cart';
-import type { Outlet } from '../types/catalog';
+import type { StoreCatalog } from '../types/store';
 import {
   formatRupiah,
   generateOrderId,
@@ -30,7 +30,7 @@ import {
 interface CartStandalonePageProps {
   onBack: () => void;
   cartItems: CartItem[];
-  outlet: Outlet;
+  store: StoreCatalog;
   onRemoveItem: (id: string) => void;
   onClearCart: () => void;
 }
@@ -40,7 +40,7 @@ const LOCAL_STORAGE_KEY = 'jasdor_customer_profile';
 export const CartStandalonePage: React.FC<CartStandalonePageProps> = ({
   onBack,
   cartItems,
-  outlet,
+  store,
   onRemoveItem,
   onClearCart,
 }) => {
@@ -109,12 +109,10 @@ export const CartStandalonePage: React.FC<CartStandalonePageProps> = ({
     if (!validateOrder()) return;
 
     const orderPayload: OrderPayload = {
-      orderId: generateOrderId(outlet.slug),
-      outletId: outlet.id,
-      outletName: outlet.name,
-      whatsappNumber: outlet.whatsappNumber,
-      outletAddress: outlet.address,
-      outletMapsQuery: outlet.googleMapsQuery || outlet.name,
+      orderId: generateOrderId(store.slug),
+      storeId: store.id,
+      storeName: store.name,
+      whatsappNumber: store.whatsappNumber,
       items: cartItems,
       subtotal,
       deliveryFee: 0,
@@ -127,7 +125,7 @@ export const CartStandalonePage: React.FC<CartStandalonePageProps> = ({
     };
 
     const message = constructWhatsAppMessage(orderPayload);
-    const waUrl = buildWhatsAppUrl(outlet.whatsappNumber, message);
+    const waUrl = buildWhatsAppUrl(store.whatsappNumber, message);
 
     window.open(waUrl, '_blank', 'noopener,noreferrer');
   };
@@ -152,7 +150,7 @@ export const CartStandalonePage: React.FC<CartStandalonePageProps> = ({
                 Keranjang & Checkout
               </h1>
               <p className="text-xs text-slate truncate leading-tight mt-0.5">
-                {outlet.name}
+                {store.name}
               </p>
             </div>
           </div>
@@ -190,7 +188,7 @@ export const CartStandalonePage: React.FC<CartStandalonePageProps> = ({
               Keranjangmu Masih Kosong
             </h3>
             <p className="text-xs text-slate max-w-xs mx-auto leading-relaxed">
-              Belum ada menu yang dipilih. Jelajahi menu lezat dari {outlet.name} sekarang.
+              Belum ada menu yang dipilih. Jelajahi menu lezat dari {store.name} sekarang.
             </p>
             <Button
               variant="primary"

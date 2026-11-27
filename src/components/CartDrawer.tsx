@@ -18,7 +18,7 @@ import {
   IconCheck,
 } from '@tabler/icons-react';
 import type { CartItem, CustomerProfile, OrderPayload, DeliveryMethod } from '../types/cart';
-import type { Outlet } from '../types/catalog';
+import type { StoreCatalog } from '../types/store';
 import {
   formatRupiah,
   generateOrderId,
@@ -30,7 +30,7 @@ interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   cartItems: CartItem[];
-  outlet: Outlet;
+  store: StoreCatalog;
   onRemoveItem: (id: string) => void;
   onClearCart: () => void;
 }
@@ -41,7 +41,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   isOpen,
   onClose,
   cartItems,
-  outlet,
+  store,
   onRemoveItem,
   onClearCart,
 }) => {
@@ -98,10 +98,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     setErrorMessage('');
 
     const orderPayload: OrderPayload = {
-      orderId: generateOrderId(outlet.slug),
-      outletId: outlet.id,
-      outletName: outlet.name,
-      whatsappNumber: outlet.whatsappNumber,
+      orderId: generateOrderId(store.slug),
+      storeId: store.id,
+      storeName: store.name,
+      whatsappNumber: store.whatsappNumber,
       items: cartItems,
       subtotal,
       deliveryFee: 0,
@@ -114,7 +114,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     };
 
     const message = constructWhatsAppMessage(orderPayload);
-    const waUrl = buildWhatsAppUrl(outlet.whatsappNumber, message);
+    const waUrl = buildWhatsAppUrl(store.whatsappNumber, message);
 
     window.open(waUrl, '_blank');
   };
@@ -130,7 +130,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 {step === 'cart' ? 'Keranjang Pesanan' : 'Data Pemesan'}
               </Drawer.Heading>
               <p className="text-xs text-stone-500 truncate max-w-[260px]">
-                {outlet.name}
+                {store.name}
               </p>
             </div>
             <Drawer.CloseTrigger />

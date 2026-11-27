@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import type { CartItem, CustomerProfile, OrderPayload } from '../types/cart';
 import type { MenuItem, MenuOption } from '../types/catalog';
-import { BRANDS, getOutletsByBrand } from '../data/mockBrands';
+import { DEFAULT_STORE } from '../data/defaultStore';
 import { constructWhatsAppMessage, buildWhatsAppUrl, generateOrderId } from '../utils/whatsapp';
 
 const CART_STORAGE_KEY = 'jasdor_cart';
 const CUSTOMER_STORAGE_KEY = 'jasdor_customer_profile';
-const DEFAULT_OUTLET = getOutletsByBrand(BRANDS[0])[0];
 
 const DEFAULT_CUSTOMER: CustomerProfile = {
   name: '',
@@ -139,10 +138,10 @@ export function useCartManager() {
     });
 
     const payload: OrderPayload = {
-      orderId: generateOrderId(DEFAULT_OUTLET.slug),
-      outletId: DEFAULT_OUTLET.id,
-      outletName: DEFAULT_OUTLET.name,
-      whatsappNumber: DEFAULT_OUTLET.whatsappNumber,
+      orderId: generateOrderId(DEFAULT_STORE.slug),
+      storeId: DEFAULT_STORE.id,
+      storeName: DEFAULT_STORE.name,
+      whatsappNumber: DEFAULT_STORE.whatsappNumber,
       items: cartItems,
       subtotal,
       deliveryFee,
@@ -152,11 +151,11 @@ export function useCartManager() {
     };
 
     const message = constructWhatsAppMessage(payload);
-    return buildWhatsAppUrl(DEFAULT_OUTLET.whatsappNumber, message);
+    return buildWhatsAppUrl(DEFAULT_STORE.whatsappNumber, message);
   };
 
   return {
-    outlet: DEFAULT_OUTLET,
+    store: DEFAULT_STORE,
     cartItems,
     addToCart,
     updateQuantity,

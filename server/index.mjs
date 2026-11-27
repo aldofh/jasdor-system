@@ -15,20 +15,39 @@ let writeQueue = Promise.resolve();
 
 async function readCatalog() {
   try {
-    return JSON.parse(await readFile(catalogPath, 'utf8'));
+    const saved = JSON.parse(await readFile(catalogPath, 'utf8'));
+    if (Array.isArray(saved)) {
+      const currentCatalog = saved.find((entry) => entry.id === 'kopi-kenangan') ?? saved[0];
+      if (!currentCatalog) return null;
+
+      const store = {
+        id: 'ketoprak-was-was',
+        name: 'Ketoprak Was Was',
+        slug: 'ketoprak-was-was',
+        logoUrl: '/images/kopi-kenangan-cup.png',
+        whatsappNumber: currentCatalog.defaultWhatsApp,
+        categories: currentCatalog.categories,
+        menus: currentCatalog.menus,
+      };
+      await writeCatalog(store);
+      return store;
+    }
+    return saved;
   } catch (error) {
     if (error?.code === 'ENOENT') return null;
     throw error;
   }
 }
 
-function isValidCatalog(brands) {
-  return Array.isArray(brands) && brands.length > 0 && brands.every((brand) =>
-    typeof brand?.id === 'string' &&
-    typeof brand?.name === 'string' &&
-    Array.isArray(brand.categories) &&
-    Array.isArray(brand.menus) &&
-    brand.menus.every((menu) =>
+function isValidStore(store) {
+  return typeof store?.id === 'string' &&
+    typeof store?.name === 'string' &&
+    typeof store?.slug === 'string' &&
+    typeof store?.logoUrl === 'string' &&
+    typeof store?.whatsappNumber === 'string' &&
+    Array.isArray(store.categories) &&
+    Array.isArray(store.menus) &&
+    store.menus.every((menu) =>
       typeof menu?.id === 'string' &&
       typeof menu?.name === 'string' &&
       typeof menu?.description === 'string' &&
@@ -37,15 +56,14 @@ function isValidCatalog(brands) {
       typeof menu?.imageUrl === 'string' &&
       typeof menu?.category === 'string' &&
       typeof menu?.isAvailable === 'boolean',
-    ),
-  );
+    );
 }
 
-async function writeCatalog(brands) {
+async function writeCatalog(store) {
   const operation = writeQueue.then(async () => {
     await mkdir(dataDirectory, { recursive: true });
     const temporaryPath = `${catalogPath}.tmp`;
-    await writeFile(temporaryPath, JSON.stringify(brands, null, 2), 'utf8');
+    await writeFile(temporaryPath, JSON.stringify(store, null, 2), 'utf8');
     await rename(temporaryPath, catalogPath);
   });
   writeQueue = operation.catch(() => {});
@@ -134,7 +152,7 @@ const server = createServer(async (request, response) => {
 
   if (pathname === '/api/catalog' && request.method === 'GET') {
     try {
-      sendJson(response, 200, { brands: await readCatalog() });
+      sendJson(response, 200, { store: await readCatalog() });
     } catch (error) {
       console.error('Failed to read catalog:', error);
       sendJson(response, 500, { error: 'Katalog gagal dibaca dari penyimpanan server.' });
@@ -145,8 +163,8 @@ const server = createServer(async (request, response) => {
   if ((pathname === '/api/catalog' && request.method === 'PUT') ||
       (pathname === '/api/catalog/seed' && request.method === 'POST')) {
     try {
-      const { brands } = await readRequestBody(request);
-      if (!isValidCatalog(brands)) {
+      const { store } = await readRequestBody(request);
+      if (!isValidStore(store)) {
         sendJson(response, 400, { error: 'Struktur katalog tidak valid.' });
         return;
       }
@@ -154,13 +172,13 @@ const server = createServer(async (request, response) => {
       if (pathname.endsWith('/seed')) {
         const existing = await readCatalog();
         if (existing) {
-          sendJson(response, 200, { brands: existing });
+          sendJson(response, 200, { store: existing });
           return;
         }
       }
 
-      await writeCatalog(brands);
-      sendJson(response, 200, { brands });
+      await writeCatalog(store);
+      sendJson(response, 200, { store });
     } catch (error) {
       console.error('Failed to save catalog:', error);
       sendJson(response, error?.statusCode ?? 500, {

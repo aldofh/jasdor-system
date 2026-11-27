@@ -1,13 +1,13 @@
-import type { BrandInfo } from '../data/mockBrands';
+import type { StoreCatalog } from '../types/store';
 
 interface CatalogResponse {
-  brands: BrandInfo[] | null;
+  store: StoreCatalog | null;
 }
 
 async function requestCatalog(
   path: string,
   init?: RequestInit,
-): Promise<BrandInfo[]> {
+): Promise<StoreCatalog> {
   const response = await fetch(path, {
     ...init,
     headers: {
@@ -21,30 +21,30 @@ async function requestCatalog(
   }
 
   const data = (await response.json()) as CatalogResponse;
-  if (!Array.isArray(data.brands)) {
+  if (!data.store || !Array.isArray(data.store.menus)) {
     throw new Error('Data katalog dari server tidak valid.');
   }
-  return data.brands;
+  return data.store;
 }
 
-export async function loadCatalog(seed: BrandInfo[]): Promise<BrandInfo[]> {
+export async function loadCatalog(seed: StoreCatalog): Promise<StoreCatalog> {
   const response = await fetch('/api/catalog');
   if (!response.ok) {
     throw new Error(`Gagal memuat katalog (HTTP ${response.status}).`);
   }
 
   const data = (await response.json()) as CatalogResponse;
-  if (Array.isArray(data.brands)) return data.brands;
+  if (data.store) return data.store;
 
   return requestCatalog('/api/catalog/seed', {
     method: 'POST',
-    body: JSON.stringify({ brands: seed }),
+    body: JSON.stringify({ store: seed }),
   });
 }
 
-export function saveCatalog(brands: BrandInfo[]): Promise<BrandInfo[]> {
+export function saveCatalog(store: StoreCatalog): Promise<StoreCatalog> {
   return requestCatalog('/api/catalog', {
     method: 'PUT',
-    body: JSON.stringify({ brands }),
+    body: JSON.stringify({ store }),
   });
 }

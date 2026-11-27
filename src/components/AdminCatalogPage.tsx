@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent, type ChangeEvent } from 'react';
 import { IconArrowLeft, IconDeviceFloppy, IconPencil, IconPlus, IconTrash } from '@tabler/icons-react';
-import { BRANDS, type BrandInfo } from '../data/mockBrands';
+import { DEFAULT_STORE } from '../data/defaultStore';
 import type { MenuItem } from '../types/catalog';
+import type { StoreCatalog } from '../types/store';
 import { formatRupiah } from '../utils/whatsapp';
 import { loadCatalog, saveCatalog } from '../services/catalogApi';
 
@@ -26,8 +27,7 @@ function isAllowedImageSource(value: string): boolean {
 }
 
 export function AdminCatalogPage() {
-  const [brands, setBrands] = useState<BrandInfo[]>([]);
-  const [selectedBrandId, setSelectedBrandId] = useState('');
+  const [store, setStore] = useState<StoreCatalog | null>(null);
   const [form, setForm] = useState<MenuForm>(EMPTY_FORM);
   const [editingMenuId, setEditingMenuId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,11 +37,10 @@ export function AdminCatalogPage() {
 
   useEffect(() => {
     let active = true;
-    loadCatalog(BRANDS)
+    loadCatalog(DEFAULT_STORE)
       .then((catalog) => {
         if (!active) return;
-        setBrands(catalog);
-        setSelectedBrandId(catalog[0]?.id ?? '');
+        setStore(catalog);
       })
       .catch((error: unknown) => {
         if (active) {
@@ -57,10 +56,9 @@ export function AdminCatalogPage() {
     };
   }, []);
 
-  const selectedBrand = brands.find((brand) => brand.id === selectedBrandId);
   const categories = useMemo(
-    () => selectedBrand?.categories ?? [],
-    [selectedBrand],
+    () => store?.categories ?? [],
+    [store],
   );
 
   const resetForm = () => {
@@ -82,13 +80,13 @@ export function AdminCatalogPage() {
     setNotice('');
   };
 
-  const persistCatalog = async (updated: BrandInfo[], successMessage: string): Promise<boolean> => {
+  const persistCatalog = async (updated: StoreCatalog, successMessage: string): Promise<boolean> => {
     setIsSaving(true);
     setErrorMessage('');
     setNotice('');
     try {
       const saved = await saveCatalog(updated);
-      setBrands(saved);
+      setStore(saved);
       setNotice(successMessage);
       return true;
     } catch (error) {
@@ -101,7 +99,7 @@ export function AdminCatalogPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!selectedBrand) return;
+    if (!store) return;
 
     const name = form.name.trim();
     const imageUrl = form.imageUrl.trim();
@@ -124,33 +122,28 @@ export function AdminCatalogPage() {
       category,
       isAvailable: form.isAvailable,
       ...(editingMenuId
-        ? { optionGroups: selectedBrand.menus.find((item) => item.id === editingMenuId)?.optionGroups }
+        ? { optionGroups: store.menus.find((item) => item.id === editingMenuId)?.optionGroups }
         : {}),
     };
-    const updated = brands.map((brand) =>
-      brand.id === selectedBrand.id
-        ? {
-            ...brand,
-            categories: brand.categories.includes(category)
-              ? brand.categories
-              : [...brand.categories, category],
-            menus: editingMenuId
-              ? brand.menus.map((item) => item.id === editingMenuId ? menu : item)
-              : [...brand.menus, menu],
-          }
-        : brand,
-    );
+    const updated: StoreCatalog = {
+      ...store,
+      categories: store.categories.includes(category)
+        ? store.categories
+        : [...store.categories, category],
+      menus: editingMenuId
+        ? store.menus.map((item) => item.id === editingMenuId ? menu : item)
+        : [...store.menus, menu],
+    };
     const saved = await persistCatalog(updated, editingMenuId ? 'Menu berhasil diperbarui.' : 'Menu berhasil ditambahkan.');
     if (saved) resetForm();
   };
 
   const handleDelete = async (item: MenuItem) => {
-    if (!selectedBrand || !window.confirm(`Hapus "${item.name}" dari katalog?`)) return;
-    const updated = brands.map((brand) =>
-      brand.id === selectedBrand.id
-        ? { ...brand, menus: brand.menus.filter((menu) => menu.id !== item.id) }
-        : brand,
-    );
+    if (!store || !window.confirm(`Hapus "${item.name}" dari katalog?`)) return;
+    const updated = {
+      ...store,
+      menus: store.menus.filter((menu) => menu.id !== item.id),
+    };
     await persistCatalog(updated, 'Menu berhasil dihapus.');
     if (editingMenuId === item.id) resetForm();
   };
@@ -191,29 +184,11 @@ export function AdminCatalogPage() {
             <h1 className="text-2xl font-bold">Admin Katalog</h1>
             <p className="mt-1 text-sm text-slate">Kelola produk yang tampil di halaman pelanggan.</p>
           </div>
-          {selectedBrand && (
-            <label className="grid gap-1 text-sm font-medium">
-              Brand
-              <select
-                className="min-w-40 rounded-xl border border-hairline bg-white px-3 py-2"
-                value={selectedBrandId}
-                onChange={(event) => {
-                  setSelectedBrandId(event.target.value);
-                  setForm(EMPTY_FORM);
-                  setEditingMenuId(null);
-                  setNotice('');
-                  setErrorMessage('');
-                }}
-              >
-                {brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
-              </select>
-            </label>
-          )}
         </header>
 
         {isLoading ? (
           <p role="status" className="rounded-2xl bg-white p-6">Memuat katalog…</p>
-        ) : errorMessage && brands.length === 0 ? (
+        ) : errorMessage && !store ? (
           <div role="alert" className="rounded-2xl border border-red-200 bg-white p-6 text-red-700">{errorMessage}</div>
         ) : (
           <>
@@ -224,8 +199,8 @@ export function AdminCatalogPage() {
               <section className="rounded-2xl border border-hairline bg-white p-4 sm:p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <h2 className="text-lg font-semibold">Katalog {selectedBrand?.name}</h2>
-                    <p className="text-sm text-slate">{selectedBrand?.menus.length ?? 0} menu</p>
+                    <h2 className="text-lg font-semibold">Katalog {store?.name}</h2>
+                    <p className="text-sm text-slate">{store?.menus.length ?? 0} menu</p>
                   </div>
                   <button
                     type="button"
@@ -236,7 +211,7 @@ export function AdminCatalogPage() {
                   </button>
                 </div>
                 <div className="divide-y divide-hairline">
-                  {selectedBrand?.menus.map((item) => (
+                  {store?.menus.map((item) => (
                     <article key={item.id} className="flex items-center gap-3 py-3">
                       <img src={item.imageUrl} alt="" className="h-16 w-16 rounded-xl border border-hairline bg-paper-frost object-cover" />
                       <div className="min-w-0 flex-1">
@@ -254,7 +229,7 @@ export function AdminCatalogPage() {
                       </button>
                     </article>
                   ))}
-                  {selectedBrand?.menus.length === 0 && <p className="py-8 text-center text-sm text-slate">Belum ada menu untuk brand ini.</p>}
+                  {store?.menus.length === 0 && <p className="py-8 text-center text-sm text-slate">Belum ada menu untuk toko ini.</p>}
                 </div>
               </section>
 

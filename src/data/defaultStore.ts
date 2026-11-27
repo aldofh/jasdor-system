@@ -1,0 +1,112 @@
+import type { StoreCatalog } from '../types/store';
+
+export const DEFAULT_STORE: StoreCatalog = {
+  id: 'ketoprak-was-was',
+  name: 'Ketoprak Was Was',
+  slug: 'ketoprak-was-was',
+  logoUrl: '/images/kopi-kenangan-cup.png',
+  whatsappNumber: '6281234567890',
+  categories: ['Coffee', 'Non-Coffee', 'Snacks'],
+  menus: [
+    {
+      id: 'kk-01',
+      name: 'Kopi Kenangan Mantan',
+      description: 'Espresso dengan susu segar dan gula aren asli pilihan nusantara.',
+      basePrice: 19000,
+      imageUrl: '/images/kopi-kenangan-cup.png',
+      category: 'Coffee',
+      isAvailable: true,
+      optionGroups: [
+        {
+          id: 'size',
+          name: 'Ukuran',
+          required: true,
+          type: 'radio',
+          options: [
+            { id: 'regular', name: 'Regular', priceDelta: 0 },
+            { id: 'large', name: 'Large', priceDelta: 5000 },
+          ],
+        },
+        {
+          id: 'sugar',
+          name: 'Level Gula',
+          required: true,
+          type: 'radio',
+          options: [
+            { id: 'normal-sugar', name: 'Normal Sugar (100%)', priceDelta: 0 },
+            { id: 'less-sugar', name: 'Less Sugar (50%)', priceDelta: 0 },
+            { id: 'no-sugar', name: 'No Sugar (0%)', priceDelta: 0 },
+          ],
+        },
+        {
+          id: 'ice',
+          name: 'Level Es',
+          required: true,
+          type: 'radio',
+          options: [
+            { id: 'normal-ice', name: 'Normal Ice', priceDelta: 0 },
+            { id: 'less-ice', name: 'Less Ice', priceDelta: 0 },
+            { id: 'no-ice', name: 'No Ice', priceDelta: 0 },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'kk-02',
+      name: 'Avocado Coffee',
+      description: 'Paduan alpukat gurih dengan espresso pekat dan susu kental manis.',
+      basePrice: 28000,
+      imageUrl: '/images/kopi-kenangan-cup.png',
+      category: 'Coffee',
+      isAvailable: true,
+      optionGroups: [
+        {
+          id: 'size',
+          name: 'Ukuran',
+          required: true,
+          type: 'radio',
+          options: [
+            { id: 'regular', name: 'Regular', priceDelta: 0 },
+            { id: 'large', name: 'Large', priceDelta: 6000 },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'kk-03',
+      name: 'Dua Shot Iced Shaken',
+      description: 'Espresso double shot dikocok dingin dengan susu kental creamy.',
+      basePrice: 22000,
+      imageUrl: '/images/kopi-kenangan-cup.png',
+      category: 'Coffee',
+      isAvailable: true,
+    },
+    {
+      id: 'kk-04',
+      name: 'Milo Dinosaurus Kenangan',
+      description: 'Susu cokelat Milo kental bertabur bubuk Milo melimpah di atasnya.',
+      basePrice: 20000,
+      imageUrl: '/images/kopi-kenangan-cup.png',
+      category: 'Non-Coffee',
+      isAvailable: true,
+    },
+    {
+      id: 'kk-05',
+      name: 'Roti Cokelat Klasik',
+      description: 'Roti lembut isi pasta cokelat belgian tebal dan lumer.',
+      basePrice: 12000,
+      imageUrl: '/images/kopi-kenangan-cup.png',
+      category: 'Snacks',
+      isAvailable: true,
+    },
+    {
+      id: 'kk-06',
+      name: 'Roti Daging Asap Keju',
+      description: 'Roti gurih dengan isian beef bacon dan saus keju cheddar leleh.',
+      basePrice: 14000,
+      imageUrl: '/images/kopi-kenangan-cup.png',
+      category: 'Snacks',
+      isAvailable: true,
+    },
+  ],
+};

@@ -11,7 +11,7 @@ import {
   IconCheck,
   IconShoppingBag,
 } from '@tabler/icons-react';
-import { BRANDS, getOutletsByBrand } from './data/mockBrands';
+import { DEFAULT_STORE } from './data/defaultStore';
 import type { MenuItem } from './types/catalog';
 import type { CartItem } from './types/cart';
 import { DeliveryHeader } from './components/DeliveryHeader';
@@ -21,6 +21,7 @@ import { CartStandalonePage } from './components/CartStandalonePage';
 import { formatRupiah } from './utils/whatsapp';
 import { AdminCatalogPage } from './components/AdminCatalogPage';
 import { loadCatalog } from './services/catalogApi';
+import type { StoreCatalog } from './types/store';
 
 export default function App() {
   return window.location.pathname === '/admin'
@@ -29,8 +30,7 @@ export default function App() {
 }
 
 function CatalogPage() {
-  const [catalogBrand, setCatalogBrand] = useState(BRANDS[0]);
-  const currentOutlet = getOutletsByBrand(catalogBrand)[0];
+  const [store, setStore] = useState<StoreCatalog>(DEFAULT_STORE);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -45,14 +45,10 @@ function CatalogPage() {
 
   useEffect(() => {
     let active = true;
-    loadCatalog(BRANDS)
+    loadCatalog(DEFAULT_STORE)
       .then((catalog) => {
         if (!active) return;
-        const selected = catalog.find((brand) => brand.id === BRANDS[0].id) ?? catalog[0];
-        if (!selected) {
-          throw new Error('Brand katalog utama tidak ditemukan.');
-        }
-        setCatalogBrand(selected);
+        setStore(catalog);
       })
       .catch((error: unknown) => {
         if (active) {
@@ -79,7 +75,7 @@ function CatalogPage() {
         setDetailProduct(null);
         setIsCartOpen(true);
       } else if (state.view === 'product') {
-        const found = currentOutlet.menus.find((m) => m.id === state.productId);
+        const found = store.menus.find((m) => m.id === state.productId);
         if (found) {
           setDetailProduct(found);
           setIsCartOpen(false);
@@ -89,7 +85,7 @@ function CatalogPage() {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [currentOutlet]);
+  }, [store]);
 
   const openProductDetail = (item: MenuItem) => {
     window.history.pushState({ view: 'product', productId: item.id }, '', `#product-${item.id}`);
@@ -117,9 +113,9 @@ function CatalogPage() {
     }
   };
 
-  const categories = ['All', ...currentOutlet.categories];
+  const categories = ['All', ...store.categories];
 
-  const filteredMenus = currentOutlet.menus
+  const filteredMenus = store.menus
     .filter((item) => {
       const matchCategory =
         selectedCategory === 'All' || item.category === selectedCategory;
@@ -194,7 +190,7 @@ function CatalogPage() {
         <CartStandalonePage
           onBack={closeCart}
           cartItems={cartItems}
-          outlet={currentOutlet}
+          store={store}
           onRemoveItem={handleRemoveItem}
           onClearCart={handleClearCart}
         />
@@ -222,9 +218,9 @@ function CatalogPage() {
       <div className="min-h-screen bg-gallery-white text-ink pb-20 font-sans antialiased">
         {/* App Shell Container Maksimal Mobile-First */}
         <div className="max-w-md mx-auto px-4 pt-3 space-y-4">
-          {/* 1. Header Brand & Notifikasi */}
+          {/* 1. Header Toko */}
           <DeliveryHeader
-            currentOutlet={currentOutlet}
+            store={store}
           />
 
           {/* 2. Search Bar Bersih: Paper Frost, Hairline & Dropdown Popover */}

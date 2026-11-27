@@ -1,27 +1,25 @@
 import React from 'react';
 import { Chip } from '@heroui/react';
-import type { Outlet } from '../types/catalog';
+import type { StoreCatalog } from '../types/store';
 
 interface DeliveryHeaderProps {
-  currentOutlet?: Outlet;
+  store: StoreCatalog;
   ownerName?: string;
-  storeName?: string;
 }
 
 export const DeliveryHeader: React.FC<DeliveryHeaderProps> = ({
-  currentOutlet,
+  store,
   ownerName = 'Ketoprak Was Was',
-  storeName,
 }) => {
-  const displayName = storeName || currentOutlet?.brand || 'WASWAS';
+  const displayName = store.name;
 
   return (
     <div className="flex items-center justify-between py-1.5">
       <div className="flex items-center gap-3 text-left min-w-0">
-        {/* Brand Icon / Avatar: Gallery White (#ffffff) & Hairline Silver (#d6d6d6) */}
+        {/* Store icon / avatar */}
         <div className="w-11 h-11 rounded-2xl bg-gallery-white border border-hairline p-1.5 flex items-center justify-center shrink-0 shadow-2xs">
           <img
-            src={currentOutlet?.logoUrl || '/images/kopi-kenangan-cup.png'}
+            src={store.logoUrl || '/images/kopi-kenangan-cup.png'}
             alt={displayName}
             className="w-full h-full object-contain"
           />
